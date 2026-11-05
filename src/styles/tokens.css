@@ -1,0 +1,30 @@
+:root {
+  --paper: #ffffff;
+  --ink: #000000;
+  --muted: #6b6b6b;
+  --soft: #e9e9e9;
+  --panel: #f2f2f2;
+  --cyan: #12b5ea;
+  --lime: #92c83e;
+  --orange: #ff8b1f;
+  --mint: #6cd9c3;
+  --danger: #d62d20;
+  --font: var(--font-franklin), "Libre Franklin", Helvetica, Arial, sans-serif;
+  --gutter: clamp(16px, 4vw, 40px);
+  --wall-h: 380px;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --paper: #0e0e0e;
+  --ink: #f3f3f3;
+  --muted: #a3a3a3;
+  --soft: #2b2b2b;
+  --panel: #1b1b1b;
+  --danger: #ff6b5e; /* lighter red keeps 4.5:1 contrast on the dark paper */
+  color-scheme: dark;
+}
+
+@media (max-width: 640px) {
+  :root { --wall-h: 240px; }
+}
