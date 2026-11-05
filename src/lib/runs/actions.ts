@@ -96,20 +96,41 @@ async function executeStep(admin: AdminClient, runId: string, claim: runs.Claime
 
 async function saveOutput(admin: AdminClient, runId: string, claim: runs.ClaimedRun, output: GeminiOutput, latencyMs: number): Promise<AdvanceResult> {
   const { step } = claim;
+  let saved: { text: string | null; imagePath: string | null };
   try {
-    const imagePath = "image" in output ? `${runId}/step-${pad2(step.stepOrder)}.${extFromMime(output.image.mimeType)}` : null;
-    if ("image" in output && imagePath) await uploadRunImage(admin, imagePath, output.image.bytes, output.image.mimeType);
-    const text = "text" in output ? output.text.slice(0, 20000) : null;
-    await runs.completeStep(admin, step.id, { text, imagePath, latencyMs });
-    if (claim.isLast) await runs.completeRun(admin, runId);
-    const urls = imagePath ? await signRunImages(admin, [imagePath]) : new Map<string, string>();
-    return {
-      state: claim.isLast ? "succeeded" : "running",
-      step: { stepOrder: step.stepOrder, status: "succeeded", text, imageUrl: imagePath ? urls.get(imagePath) ?? null : null, error: null, latencyMs },
-    };
+    saved = await storeOutput(admin, runId, step, output, latencyMs);
   } catch (error) {
     console.error("[runs] saving output failed", { runId, stepOrder: step.stepOrder, message: (error as Error).message });
     return failWith(admin, runId, step, `Step ${pad2(step.stepOrder)}: couldn't save the output. Try again.`, latencyMs);
+  }
+  // The output is persisted from here on; closing the run must never turn it into a failure.
+  const finished = claim.isLast && (await closeRun(admin, runId));
+  const urls = saved.imagePath ? await signRunImages(admin, [saved.imagePath]) : new Map<string, string>();
+  return {
+    state: finished ? "succeeded" : "running",
+    step: {
+      stepOrder: step.stepOrder, status: "succeeded", text: saved.text,
+      imageUrl: saved.imagePath ? urls.get(saved.imagePath) ?? null : null, error: null, latencyMs,
+    },
+  };
+}
+
+async function storeOutput(admin: AdminClient, runId: string, step: ClaimedStep, output: GeminiOutput, latencyMs: number) {
+  const imagePath = "image" in output ? `${runId}/step-${pad2(step.stepOrder)}.${extFromMime(output.image.mimeType)}` : null;
+  if ("image" in output && imagePath) await uploadRunImage(admin, imagePath, output.image.bytes, output.image.mimeType);
+  const text = "text" in output ? output.text.slice(0, 20000) : null;
+  await runs.completeStep(admin, step.id, { text, imagePath, latencyMs });
+  return { text, imagePath };
+}
+
+/** Returns false when closing failed; the client's next advanceRun lets claim_next_run_step close the run. */
+async function closeRun(admin: AdminClient, runId: string): Promise<boolean> {
+  try {
+    await runs.completeRun(admin, runId);
+    return true;
+  } catch (error) {
+    console.error("[runs] closing run failed; the next claim will close it", { runId, message: (error as Error).message });
+    return false;
   }
 }
 

@@ -49,15 +49,22 @@ export async function getChainName(chainId: string): Promise<string | null> {
   return data ? z.object({ name: z.string() }).parse(data).name : null;
 }
 
+const latestRow = outputRow.extend({ prompt_chain_step_id: z.guid() });
+
+/** One batched query, newest first; the first row seen per step is that step's latest output. */
 async function latestOutputs(admin: AdminClient, stepIds: readonly string[]): Promise<Map<string, Output>> {
-  const pairs = await Promise.all(stepIds.map(async (id) => {
-    const { data, error } = await admin.from("prompt_chain_run_steps")
-      .select("output_text, output_image_path").eq("prompt_chain_step_id", id).eq("status", "succeeded")
-      .order("completed_at", { ascending: false }).limit(1).maybeSingle();
-    check(`latest output ${id}`, error);
-    return data ? ([[id, outputRow.parse(data)]] as const) : [];
-  }));
-  return new Map(pairs.flat());
+  if (stepIds.length === 0) return new Map();
+  const { data, error } = await admin.from("prompt_chain_run_steps")
+    .select("prompt_chain_step_id, output_text, output_image_path").in("prompt_chain_step_id", [...stepIds])
+    .eq("status", "succeeded").order("completed_at", { ascending: false }).limit(500);
+  check("latest outputs", error);
+  const latest = new Map<string, Output>();
+  for (const row of z.array(latestRow).parse(data)) {
+    if (!latest.has(row.prompt_chain_step_id)) {
+      latest.set(row.prompt_chain_step_id, { output_text: row.output_text, output_image_path: row.output_image_path });
+    }
+  }
+  return latest;
 }
 
 const signed = (urls: Map<string, string>, path: string | null, width: number | null = null, height: number | null = null): SignedImage | null => {

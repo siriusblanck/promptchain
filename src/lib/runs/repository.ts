@@ -54,27 +54,31 @@ export async function claimNextStep(admin: AdminClient, runId: string): Promise<
 }
 
 export async function completeStep(admin: AdminClient, stepId: string, out: { text: string | null; imagePath: string | null; latencyMs: number }) {
-  const { error } = await admin.from("prompt_chain_run_steps").update({
+  const { data, error } = await admin.from("prompt_chain_run_steps").update({
     status: "succeeded", output_text: out.text, output_image_path: out.imagePath, latency_ms: out.latencyMs,
     completed_at: new Date().toISOString(),
-  }).eq("id", stepId).eq("status", "running");
+  }).eq("id", stepId).eq("status", "running").select("id");
   raise("complete step", error);
+  // A zero-row update means the guard missed (the step is no longer running): never report success then.
+  if (!data || data.length !== 1) throw new Error("complete step: the step was no longer running");
 }
 
+/** Zero rows is fine here: claim_next_run_step may already have closed the run. */
 export async function completeRun(admin: AdminClient, runId: string) {
   const { error } = await admin.from("prompt_chain_runs")
     .update({ status: "succeeded", completed_at: new Date().toISOString() }).eq("id", runId).eq("status", "running");
   raise("complete run", error);
 }
 
+/** Guarded like completeStep so a failure can never overwrite an output that already succeeded. */
 export async function failStep(admin: AdminClient, runId: string, stepId: string, message: string, latencyMs: number) {
   const now = new Date().toISOString();
   const short = message.slice(0, 600);
   const { error: stepError } = await admin.from("prompt_chain_run_steps")
-    .update({ status: "failed", error_message: short, latency_ms: latencyMs, completed_at: now }).eq("id", stepId);
+    .update({ status: "failed", error_message: short, latency_ms: latencyMs, completed_at: now }).eq("id", stepId).eq("status", "running");
   raise("fail step", stepError);
   const { error: runError } = await admin.from("prompt_chain_runs")
-    .update({ status: "failed", error_message: short, completed_at: now }).eq("id", runId);
+    .update({ status: "failed", error_message: short, completed_at: now }).eq("id", runId).eq("status", "running");
   raise("fail run", runError);
 }
 
