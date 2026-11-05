@@ -1,10 +1,13 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import type { FormState } from "@/lib/action-result";
 import { deleteStep, saveStep } from "@/lib/chains/actions";
 import { pad2 } from "@/lib/chains/presentation";
 import type { ChainStep, LlmModel } from "@/lib/chains/types";
+import { smoothScrollTo } from "@/lib/ui/smooth-scroll";
+
+const GLIDE_MS = 800;
 
 type Props = {
   chainId: string; step: ChainStep | null; position: number; models: LlmModel[];
@@ -16,6 +19,16 @@ export function StepEditor({ chainId, step, position, models, receives, sends, o
   const [confirming, setConfirming] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, startDelete] = useTransition();
+  const sectionRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  // The editor opens below the wall: glide the reader down to it, then put the cursor in Title.
+  useEffect(() => {
+    smoothScrollTo(sectionRef.current, { duration: GLIDE_MS, offset: 24 });
+    const timer = window.setTimeout(() => titleRef.current?.focus({ preventScroll: true }), GLIDE_MS + 40);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const [state, formAction, pending] = useActionState<FormState, FormData>(async (prev, formData) => {
     const result = await saveStep(chainId, step?.id ?? null, prev, formData);
     if (result.ok) onClose();
@@ -31,7 +44,7 @@ export function StepEditor({ chainId, step, position, models, receives, sends, o
 
   const label = pad2(position);
   return (
-    <section className="editor" aria-label={step ? `Edit step ${label}` : "New step"}>
+    <section ref={sectionRef} className="editor" aria-label={step ? `Edit step ${label}` : "New step"}>
       <div>
         <p className="eyebrow">{step ? "Editing step" : "New step"}</p>
         <h2 className="display-2">{label}<br />{step?.title ?? "Untitled step"}</h2>
@@ -40,7 +53,7 @@ export function StepEditor({ chainId, step, position, models, receives, sends, o
       <form action={formAction} noValidate>
         <label className="field">
           <span className="field__label">Title</span>
-          <input className="field__input" name="title" defaultValue={step?.title ?? ""} maxLength={80} />
+          <input ref={titleRef} className="field__input" name="title" defaultValue={step?.title ?? ""} maxLength={80} />
         </label>
         {state.fieldErrors?.title && <p className="field__error">{state.fieldErrors.title}</p>}
         <label className="field">

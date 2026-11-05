@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { describeTrail, ratioOf, tileColor } from "@/lib/chains/presentation";
@@ -16,7 +17,7 @@ export default async function CollectionPage() {
       </div>
       <ul className="collection-grid">
         {chains.map((chain, index) => (
-          <li key={chain.id}>
+          <li key={chain.id} style={{ "--i": index } as CSSProperties}>
             <Link className="chain-card" href={`/chains/${chain.id}`}>
               <div className="chain-card__cover">
                 {chain.cover ? (

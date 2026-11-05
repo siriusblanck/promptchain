@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
 import { runningStepNumber, type LiveRun } from "@/lib/runs/live-run";
+import { smoothScrollTo } from "@/lib/ui/smooth-scroll";
 import type { RunRequest } from "./use-chain-run";
 import type { RunInput } from "./use-run-input";
 
@@ -18,17 +19,24 @@ type Props = {
   stepCount: number; live: LiveRun | null; running: boolean; input: RunInput;
   /** Incremented when the wall's Input card is clicked: the panel opens the photo picker. */
   pickRequest: number;
+  /** False only for the automatic open on a never-run chain, which is already in view. */
+  scrollOnOpen: boolean;
   onStart: (request: RunRequest) => void;
 };
 
-export function RunPanel({ stepCount, live, running, input, pickRequest, onStart }: Props) {
+export function RunPanel({ stepCount, live, running, input, pickRequest, scrollOnOpen, onStart }: Props) {
   const panelRef = useRef<HTMLElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const scrollOnMount = useRef(scrollOnOpen);
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
+    if (scrollOnMount.current) smoothScrollTo(panelRef.current, { duration: 650, offset: 24 });
+  }, []);
+
+  useEffect(() => {
     if (pickRequest === 0) return;
-    panelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    smoothScrollTo(panelRef.current, { duration: 650, offset: 24 });
     fileRef.current?.click();
   }, [pickRequest]);
 

@@ -29,10 +29,12 @@ export function StepCard(props: Props) {
     : {};
   const className = `card-media card-media--${view.kind === "photo" ? "photo" : "text"}${dragging ? " card-media--drop" : ""}`;
   const style = view.kind === "photo" ? ({ "--ratio": view.ratio } as CSSProperties) : undefined;
+  // Keyed on what's shown, so each new run result remounts and fades in.
+  const mediaKey = view.kind === "photo" ? view.url : `${view.tone}:${view.text ?? ""}`;
   const media = view.kind === "photo" ? (
-    <img src={view.url} alt={`${title}: latest image`} />
+    <img key={mediaKey} src={view.url} alt={`${title}: latest image`} />
   ) : (
-    <span className={`tile tile--${view.tone}`}>
+    <span key={mediaKey} className={`tile tile--${view.tone}`}>
       <span className="tile__n">{tileNumber}</span>
       {view.text && <span className="tile__q">{view.text}</span>}
     </span>

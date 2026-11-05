@@ -1,0 +1,60 @@
+/* Motion: short, eased, and switched off for reduced-motion users (bottom of file). */
+:root {
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+body { transition: background-color 280ms ease, color 280ms ease; }
+
+/* Page and section entrances */
+.page-enter { animation: rise-in 440ms var(--ease-out) both; }
+.collection-grid > li { animation: rise-in 520ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 45ms); }
+.editor, .run-panel { animation: rise-in 420ms var(--ease-out) both; }
+.notice, .confirm, .field__error { animation: pop-in 220ms var(--ease-out) both; }
+
+/* Wall: results fade in as they land; the rail thickens smoothly behind finished steps. */
+.card-media > .tile, .card-media > img { animation: fade-in 460ms ease both; }
+.wall__col::before { transition: height 420ms var(--ease-out), top 420ms var(--ease-out); }
+button.card-media:hover { transform: translateY(-3px); }
+
+/* Collection covers zoom gently on hover. */
+.chain-card__cover img, .chain-card__cover .tile { transition: transform 600ms var(--ease-out); }
+.chain-card:hover .chain-card__cover img, .chain-card:hover .chain-card__cover .tile { transform: scale(1.04); }
+
+/* Every button gives tactile feedback. */
+.btn, .link, .seg__item, .moves__btn, .add-tile, .wall-bar button, button.card-media, .drop {
+  transition: transform 160ms var(--ease-out), background-color 180ms ease, color 180ms ease,
+    box-shadow 180ms ease, opacity 180ms ease, outline-offset 220ms var(--ease-out);
+}
+.btn:hover:not(:disabled) { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+.moves__btn:hover:not(:disabled), .wall-bar button:hover { transform: translateY(-1px); }
+.add-tile:hover:not(:disabled), .drop:hover { background-color: var(--soft); }
+.btn:active:not(:disabled), .seg__item:active, .moves__btn:active:not(:disabled), .add-tile:active:not(:disabled),
+.wall-bar button:active, button.card-media:active { transform: translateY(1px) scale(0.96); }
+.link:active { transform: translateY(1px); }
+
+/* Loading skeleton, shown the moment a link is clicked while the next page loads. */
+.skeleton { display: grid; gap: 14px; animation: fade-in 200ms ease both; }
+.skeleton__block {
+  background: linear-gradient(90deg, var(--soft) 0%, var(--panel) 50%, var(--soft) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+.skeleton__title { height: 52px; width: min(520px, 80%); }
+.skeleton__line { height: 14px; width: min(360px, 60%); }
+.skeleton__row { display: flex; gap: 26px; margin-top: 18px; overflow: hidden; }
+.skeleton__card { flex: none; width: 176px; height: var(--wall-h); }
+.skeleton__card:first-child { width: 285px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+}

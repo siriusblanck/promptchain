@@ -5,6 +5,7 @@ import "@/styles/tokens.css";
 import "@/styles/base.css";
 import "@/styles/wall.css";
 import "@/styles/pages.css";
+import "@/styles/motion.css";
 
 const franklin = Libre_Franklin({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-franklin", display: "swap" });
 
