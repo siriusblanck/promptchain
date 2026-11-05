@@ -55,7 +55,7 @@ Its visual language follows moma.org. It does not use MoMA's name, logo or propr
 
 ## 3. Architecture
 
-**Stack** (matches `hogwumbia-admin`): Next.js 16 App Router, React 19, TypeScript, Tailwind v4,
+**Stack** (matches `hogwumbia-admin`): Next.js 16 App Router, React 19, TypeScript, plain CSS with CSS variables,
 `@supabase/ssr` + `@supabase/supabase-js`, `@google/genai`, zod 4, `next-themes`, Vitest.
 Font: Libre Franklin via `next/font/google` (400, 600, 800, 900, italic 400).
 
@@ -127,7 +127,7 @@ single-row writes is unchanged. Multi-row renumbering in one statement becomes p
 | modality | text in (`text`,`image`) |
 | status | text NOT NULL default `pending`, in (`pending`,`running`,`succeeded`,`failed`) |
 | output_text | text NULL, ≤20000 |
-| output_image_path | text NULL; output_image_width / height int NULL |
+| output_image_path | text NULL (image outputs are always requested at 3:4, so no dimensions are stored) |
 | error_message | text NULL, ≤600 |
 | latency_ms | int NULL ≥ 0; started_at / completed_at timestamptz NULL |
 | index | `(prompt_chain_step_id, completed_at DESC) WHERE status = 'succeeded'` |
@@ -191,7 +191,7 @@ the step **and** the run to `failed`, with a user-facing `error_message`.
    - claims the next step;
    - downloads the input image if any;
    - calls Gemini;
-   - stores the output (text, or image → `{runId}/step-NN.<ext>` with its dimensions);
+   - stores the output (text, or image → `{runId}/step-NN.<ext>`);
    - marks the step `succeeded` with `latency_ms`;
    - returns the step result so its card fills in.
 3. **`stepInput` (pure):** step 1 receives the run input. Step k receives step k−1's output. The shape is always
@@ -251,7 +251,7 @@ Text on accent blocks is always #000.
 **Theme**
 - `ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem disableTransitionOnChange`.
 - `suppressHydrationWarning` on `<html>`.
-- Tailwind v4 `@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *))`.
+- Tokens are CSS variables redefined under `[data-theme="dark"]` (no Tailwind).
 - The header has a segmented Light · Dark · System control.
 
 **Exhibition wall** (chain page). It follows MoMA's Exhibitions carousel:
