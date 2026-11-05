@@ -1,4 +1,8 @@
-.wall-bar { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 8px; }
+.wall-bar { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 12px; }
+.wall-bar__arrows { display: flex; gap: 4px; flex: none; }
+.wall-help { font-size: 13px; line-height: 1.45; color: var(--muted); margin: 0; max-width: 76ch; }
+.wall-help strong { color: var(--ink); }
+.card-media--drop { outline: 3px dashed var(--ink); outline-offset: 4px; }
 .wall-bar button { border: 0; background: none; font-weight: 900; font-size: 22px; cursor: pointer; padding: 2px 6px; }
 .wall { display: flex; overflow-x: auto; padding-bottom: 12px; scroll-behavior: smooth; }
 .wall__col { position: relative; flex: none; padding-right: 26px; }

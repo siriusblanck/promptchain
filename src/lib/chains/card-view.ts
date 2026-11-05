@@ -33,7 +33,7 @@ export function inputCardView(latestInput: StepOutput | null, live: LiveRun | nu
   }
   if (latestInput?.image) return { kind: "photo", url: latestInput.image.url, ratio: ratioOf(latestInput.image), stat: null };
   if (latestInput?.text) return { kind: "tile", tone: "mint", text: snippet(latestInput.text), stat: null };
-  return { kind: "tile", tone: "empty", text: "Your image or text", stat: null };
+  return { kind: "tile", tone: "empty", text: "Add a photo or text", stat: null };
 }
 
 export function describeFlow(steps: readonly ChainStep[], index: number): { receives: string; sends: string } {

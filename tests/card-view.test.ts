@@ -20,7 +20,7 @@ it("shows live progress over saved outputs", () => {
 });
 
 it("uses an empty placeholder before any run", () => {
-  expect(inputCardView(null, null)).toEqual({ kind: "tile", tone: "empty", text: "Your image or text", stat: null });
+  expect(inputCardView(null, null)).toEqual({ kind: "tile", tone: "empty", text: "Add a photo or text", stat: null });
 });
 
 it("describes what a step receives and sends", () => {
